@@ -1134,9 +1134,6 @@ END_GAME_TURN = ''
 
 function onload()
     button_setup('Set-up', SETUP_BUTTON_GUID, 'setUp', 6000, 2000, 800)
-    -- for k, v in ipairs(getSeatedPlayers()) do
-        -- print(v)
-    -- end
 end
 
 function onObjectEnterContainer(container, _)
@@ -1295,11 +1292,6 @@ function shout(msg)
     broadcastToAll(msg, { 2, 0.9, 0.9 })
 end
 
--- function bullhorn(in_msg, color_tbl)
-    -- -- Similar to shout but adds ability to specify color
-    -- broadcastToAll(msg, color_tbl)
--- end
-
 function doTheShuffle(deck)
     deck.shuffle()
     deck.shuffle()
@@ -1313,9 +1305,11 @@ function waitFrames(frames)
 end
 
 function waitSeconds(noSeconds)
-    local timeStamp = os.time() + noSeconds
-    while timeStamp > os.time() do
+    local waiter_ts = os.time() + noSeconds
+    local curr_ts = os.time()
+    while waiter_ts > curr_ts do
         coroutine.yield(0)
+        curr_ts = os.time()
     end
 end
 
@@ -1343,16 +1337,6 @@ end
 -- [[
 --     Changes by JCampbell
 -- ]]
-
--- function onPlayerTurn(varplaya)
-    -- -- Undocumented API change: https://old.reddit.com/r/tabletopsimulator/comments/g7w5be/scripting_confused_by_onplayerturn_what_is/fojz49p/
-    -- -- print("Testing... " .. varplaya)
-    -- for k,v in pairs(varplaya) do
-        -- print("Found key: " .. k)
-    -- end
-    -- print(varplaya.color)
-    -- activePlyr = vaplaya.color
--- end
 
 function returnObject(inObject)
     debugMsg('In returnObject function')
@@ -1489,19 +1473,6 @@ function purchaseCard(purchTblt, clckColor, alt_click)
             ['Sapphire'] = 0,
             ['Gold'] = 0
         }
-        -- if DEBUG_VAR == true then
-            -- print('Comparing card cost to shopper\'s hand')
-            
-            -- print('cardProps[\'Cost\'] is:')
-            -- for k, v in pairs(cardProps['Cost']) do
-                -- print(k .. ': ' .. tostring(v))
-            -- end
-            -- print('')
-            -- print('cashMoneyTbl is:')
-            -- for k, v in pairs(cashMoneyTbl) do
-                -- print(k .. ': ' .. tostring(v))
-            -- end
-        -- end
         
         local debugStr = [[Comparing card cost to shopper\'s hand'
         cardProps[\'Cost\'] is:]]
@@ -2277,6 +2248,7 @@ function setScoringZonePos(varScale)
     end
 end
 
+-- Function to update the score board
 function setScoringNote()
     local scoreStr = string.format('%-50s\n', 'SCORES:')
     for k, v in pairs(SCORE_TBL) do
@@ -2317,7 +2289,6 @@ function finalTally()
         local thirdSteamName = Player[scorBrd[3][1]].steam_name
         --Wait.time(function() doNothing() end, 5)
         
-        
         waitSeconds(5)
         
         broadcastToAll(thirdSteamName .. '!', scorBrd[3][1])
@@ -2328,7 +2299,6 @@ function finalTally()
     if #SEATED_PLYRS >= 2 then
         shout(string.format('In second place with %s points...', scorBrd[2][2]))
         local secondSteamName = Player[scorBrd[2][1]].steam_name
-        
         
         waitSeconds(5)
         --Wait.time(function() shout(secondSteamName .. '!') end, 5)
@@ -2343,28 +2313,15 @@ function finalTally()
     
     Wait.time(function() shout('...') end, 3)
     
-    
-    -- Spawn objects in winner's color to celebrate
-    -- spawnParams = {
-        -- type = 'backgammon_piece_white',
-        -- position          = {x=0, y=10, z=0},
-        -- rotation          = {x=0, y=90, z=0},
-        -- scale             = {x=1, y=1, z=1},
-        -- callback_function = function(obj) spawn_callback(obj, scorBrd[1][1]) end
-    -- }
-    -- for i = 1, 50 do
-        -- spawnObject(spawnParams)
-    -- end
-    
     Wait.time(function() broadcastToAll(firstSteamName .. '!!!', scorBrd[1][1]) end, 7)
     Wait.time(|| celebrateGoodTimes(scorBrd[1][1]), 7)
     
     -- flipTable()
 end
 
+-- Function to spawn objects when the winner is announced
 function celebrateGoodTimes(in_color)
     for i = 1, 50 do
-        
         spawnObject({
             type = 'go_game_piece_white',
             position          = {x=0, y=10, z=0},
@@ -2375,6 +2332,7 @@ function celebrateGoodTimes(in_color)
     end
 end
 
+-- Callback function for celebrateGoodTimes. Tunes the gravity, acceleration, and color of the object.
 function spawn_callback(object_spawned, color)
     seed = math.random(1, 6)
     if seed == 1 then
@@ -2423,26 +2381,5 @@ function onChat(message, sender)
 end
 
 TO_DO_LIST = [[
-   TO DO: Items not specifically in this script but need to be done
-        1) DONE: Card cost table -> how do I want to handle that?
-        2) DONE: Pull Noble costs out from GMNotes in TS_Save_7.json -> Can these be in LUAScript attr? These shouldn't change unlike cards
-        3) DONE: Get the positioning of the layered cards in TS_Save_7.json
-        4) DONE: Switch names in card cost table from colors to gem names -> will allow for easier integration into existing code
-        5) These are script specifc: 
-            * DONE: build purchase
-            * DONE: build reset turn buttons
-            * DONE: orient purchase button to table side
-            * DONE: State handler since I don't think built in sys will do what I want -> have to to update parts that use Turns.turn_color or maybe write to that variable?
-            * DONE: Set DEBUG_VAR to false
-        6) DONE: Use notes to display scores?
-        
-        Turn cleanup:
-            1) DONE: Check nobles if a card was bought
-            2) DONE: Replace card if one was reserved or bought raw
-            3) DONE: Update player's score
-            4) Check if there are any out of place gems
-            5) DONE: Check if end game is triggered
-            6) DONE: Clear end turn and reset turn buttons
-            7) DONE: Reset PREV_ACT to { nil } -> Do this last because we lose state by doing this
-            8) DONE: Show reset button for next player
+   TO DO: Fix time waiter for end game
 ]]
